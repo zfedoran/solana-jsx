@@ -72,6 +72,10 @@ pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Resu
 
     if let Some(tx_id) = prev_tx_id {
         println!("Final Transaction ID: {}", tx_id);
+        println!("\n");
+        println!("To verify the deployment, run:");
+        println!("solana-jsx serve -t {}", tx_id);
+        println!("\n");
     } else {
         return Err(anyhow!("No transactions sent"));
     }

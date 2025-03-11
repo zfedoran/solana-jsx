@@ -34,6 +34,7 @@ async fn main() -> Result<()> {
     let payer = load_keypair(&keypair_path)?;
     println!("Using keypair: {} from {}", payer.pubkey(), keypair_path.display()); // Now works with Signer in scope
     println!("Connected to: {}", rpc_url);
+    println!("\n");
 
     match cli.command {
         Commands::Deploy { filename } => deploy(&client, &payer, &filename).await,

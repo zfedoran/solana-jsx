@@ -104,7 +104,9 @@ pub async fn serve(client: &RpcClient, tx_id: Option<&str>) -> Result<()> {
     );
 
     let html = warp::path::end().map(move || warp::reply::html(html_content.clone()));
+    println!("\n");
     println!("Serving at http://localhost:3030");
+    println!("\n");
     warp::serve(html).run(([127, 0, 0, 1], 3030)).await;
 
     Ok(())
