@@ -38,7 +38,7 @@ Because.
 
 #### Deploy a JSX File
 ```bash
-    cargo run --release -- deploy -f example/SolanaApp.jsx
+solana-jsx deploy -f example/SolanaApp.jsx
 ```
 - `-f`: Path to your JSX file.
 - `-k`: (Optional) Path to your keypair.
@@ -49,7 +49,7 @@ Solana. Copy the final transaction ID printed at the end.
 
 #### Serve a Deployed Component
 ```bash
-    cargo run --release -- serve -t <final-tx-id>
+    solana-jsx serve -t <final-tx-id>
 ```
 - `-t`: The final transaction ID from the deploy step.
 
