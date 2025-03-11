@@ -1,9 +1,9 @@
-# Solana-JSX: Deploy React Components to Solana (Because Why Not?)
+# Solana-JSX
 
-Welcome to `solana-jsx`, the world's most impractical yet oddly satisfying
-utility for "deploying" JSX React components to the Solana blockchain using the
-SPL Memo program. Born from a ridiculous question—"Can you run JavaScript on
-Solana?"—this tool answers with a resounding "No, but lets keep going anyway!"
+Welcome to `solana-jsx`, the world's most impractical utility for "deploying" 
+JSX React components to the Solana blockchain using the SPL Memo program. Born 
+from a ridiculous question—"Can you run JavaScript on Solana?"—this tool 
+answers with a resounding "No, but lets keep going anyway!"
 
 ## What Does It Do?
 - **Deploy**: Compresses your JSX file, chunks it, and stores it as
@@ -75,7 +75,7 @@ Output: `Final Transaction ID: <some-tx-id>`
 4. **Retrieval**: The serve command follows the chain of transaction IDs, reassembles the chunks, decompresses, and serves it with React and Babel via a Warp server.
 
 ## Limitations
-- Max memo size is 1024 bytes, so large JSX files might break.
+- Max memo size is 1024 bytes, so large JSX files might break (CU limits also matter).
 - Only supports single-file components.
 - Imports/exports in JSX are stripped (Solana isn’t Node.js, sorry).
 - This is a joke—don’t use it for anything serious.
