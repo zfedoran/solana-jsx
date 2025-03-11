@@ -1,17 +1,27 @@
 # Solana-JSX
+![license][license-image]
+![version][version-image]
+
+[version-image]: https://img.shields.io/badge/version-0.1.0-blue.svg?style=flat
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat
+
+![Screenshot 2025-03-11 at 3 01 25 PM](https://github.com/user-attachments/assets/e251a725-cd65-4820-98d2-c4a15491553c)
 
 Welcome to `solana-jsx`, the world's most impractical utility for "deploying" 
-JSX React components to the Solana blockchain using the SPL Memo program. Born 
+React components to the Solana blockchain using the SPL Memo program. Born 
 from a ridiculous question—"Can you run JavaScript on Solana?"—this tool 
 answers with a resounding "No, but lets keep going anyway!"
 
+> [!WARNING]
+> Although it works, this is not a real deployment solution. Solana doesn’t run JavaScript. This is a meme. Enjoy responsibly.
+
 ## What Does It Do?
-- **Deploy**: Compresses your JSX file, chunks it, and stores it as
-base64-encoded memos on Solana.
+- **Deploy**: Compresses your React component, chunks it, and sends it to Solana as a linked-list of [memos](https://github.com/solana-program/memo) inside one or more transactions.
 - **Serve**: Retrieves those chunks, decompresses them, and serves your React
 component as a live webpage via a local server.
-- **Laugh**: Reminds you that this is a terrible idea for production but
-hilarious anyway.
+
+## Is it free?
+You can use this for free on devnet and testnet, where you get SOL [airdroped](https://solana.com/developers/guides/getstarted/solana-token-airdrop-and-faucets) for free. Optionally, you can be **bold** and use this on mainnet for 5000 lamports per 200 bytes.
 
 ## Why?
 Because.
@@ -31,14 +41,14 @@ Because.
 ## Usage
 
 ### Prerequisites
-- A Solana keypair (default: \`~/.config/solana/id.json\`).
-- Some SOL on your chosen cluster (Devnet is free!).
+- A Solana [keypair](https://solana.com/docs/intro/installation#create-wallet) (default: \`~/.config/solana/id.json\`).
+- Some SOL on your chosen cluster ([Devnet is free](https://solana.com/docs/intro/installation#airdrop-sol)!).
 
 ### Commands
 
 #### Deploy a JSX File
 ```bash
-solana-jsx deploy -f example/SolanaApp.jsx
+solana-jsx deploy -f example/app.jsx
 ```
 - `-f`: Path to your JSX file.
 - `-k`: (Optional) Path to your keypair.
@@ -56,32 +66,35 @@ Solana. Copy the final transaction ID printed at the end.
 This fetches the chunks, reassembles your JSX, strips imports/exports (because Solana doesn’t care), and serves it at `http://localhost:3030`.
 
 ### Example
+
+To run the example that ships with this project, clone the repository and run the following.
+
 1. Deploy:
 ```bash
-    cargo run --release -- deploy -f example/SolanaApp.jsx
+    cargo run -- deploy -f example/app.jsx
 ```
-Output: `Final Transaction ID: <some-tx-id>`
+Output: `Final Transaction ID: <tx>`
 
 2. Serve:
 ```bash
-   cargo run -- release -- serve -t <some-tx-id>
+   cargo run -- serve -t <tx>
 ```
+
 3. Open `http://localhost:3030` and marvel at your decentralized React app!
 
 ## How It Works
-1. **Compression**: Your JSX is gzipped to save space.
-2. **Chunking**: The compressed data is split into 200-byte chunks and base64-encoded (CU limited).
+1. **Compression**: Your JS is gzipped to save space.
+2. **Chunking**: The compressed data is split into 200-byte chunks and base64-encoded.
 3. **Memo Magic**: Each chunk is stored in a Solana memo with metadata linking to the previous chunk.
-4. **Retrieval**: The serve command follows the chain of transaction IDs, reassembles the chunks, decompresses, and serves it with React and Babel via a Warp server.
+4. **Retrieval**: The serve command follows the chain of transaction IDs, reassembles the chunks, decompresses, and serves it with React and Babel.
 
 ## Limitations
-- Max memo size is 1024 bytes, so large JSX files might break (CU limits also matter).
+- Max memo size is [566 bytes](https://spl.solana.com/memo#compute-limits).
 - Only supports single-file components.
 - Imports/exports in JSX are stripped (Solana isn’t Node.js, sorry).
-- This is a joke—don’t use it for anything serious.
 
 ## Contributing
-Feel free to fork, PR, or just laugh at this absurdity. Ideas:
+Feel free to fork, PR, or just enjoy its absurdity. Ideas:
 - Add JSX minification.
 - Support multi-file components (because why stop at one?).
 - Make it even dumber somehow.
@@ -89,5 +102,3 @@ Feel free to fork, PR, or just laugh at this absurdity. Ideas:
 ## License
 MIT—do whatever you want, just don’t blame me when it breaks.
 
-## Disclaimer
-This is not a real deployment solution. Solana doesn’t run JavaScript. This is a meme. Enjoy responsibly.
