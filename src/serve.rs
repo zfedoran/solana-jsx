@@ -1,10 +1,11 @@
 use solana_client::{rpc_client::RpcClient, rpc_config::RpcTransactionConfig};
 use solana_sdk::{commitment_config::CommitmentConfig, signature::Signature};
-use solana_transaction_status::{UiTransactionEncoding, option_serializer::OptionSerializer};
+use solana_transaction_status::UiTransactionEncoding;
 use anyhow::{Result, anyhow};
 use base64::{Engine as _, engine::general_purpose};
 use warp::Filter;
 use crate::utils::decompress;
+use crate::noop::NOOP_PROGRAM_ID;
 
 pub async fn serve(client: &RpcClient, tx_id: Option<&str>) -> Result<()> {
     let decompressed = if let Some(tx_id) = tx_id {
@@ -25,26 +26,22 @@ pub async fn serve(client: &RpcClient, tx_id: Option<&str>) -> Result<()> {
                 },
             )?;
 
-            let logs = tx.transaction.meta
-                .ok_or_else(|| anyhow!("No metadata in transaction: {}", current_tx_id))?;
+            let tx = tx.transaction.transaction.decode()
+                .ok_or_else(|| anyhow!("Failed to decode transaction: {}", current_tx_id))?;
 
-            let memo_log = match logs.log_messages {
-                OptionSerializer::Some(logs) => logs
-                    .into_iter()
-                    .find(|log| log.contains("Memo (len"))
-                    .ok_or_else(|| anyhow!("No memo found in logs for tx: {}", current_tx_id))?,
-                _ => return Err(anyhow!("No log messages in transaction: {}", current_tx_id)),
-            };
+            let instruction = tx.message.instructions()
+                .into_iter()
+                .find(|ix| {
+                    *ix.program_id(&tx.message.static_account_keys()) == NOOP_PROGRAM_ID
+                })
+                .ok_or_else(|| anyhow!("No noop instruction found in tx: {}", current_tx_id))?;
 
-            let memo_data = memo_log
-                .split('"')
-                .nth(1)
-                .ok_or_else(|| anyhow!("Failed to parse memo log: {}", memo_log))?;
-            println!("Memo data: {}", memo_data);
+            let instruction_data = instruction.data.clone();
+            let instruction_str = String::from_utf8(instruction_data)?;
 
-            let parts: Vec<&str> = memo_data.split('|').collect();
+            let parts: Vec<&str> = instruction_str.split('|').collect();
             if parts.len() != 3 {
-                return Err(anyhow!("Invalid memo format: {}", memo_data));
+                return Err(anyhow!("Invalid instruction data format: {}", instruction_str));
             }
 
             let encoded_chunk = parts[0];

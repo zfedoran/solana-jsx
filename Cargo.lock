@@ -3642,7 +3642,6 @@ dependencies = [
  "solana-client",
  "solana-sdk",
  "solana-transaction-status",
- "spl-memo",
  "tokio",
  "warp",
 ]

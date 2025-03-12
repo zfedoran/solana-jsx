@@ -11,7 +11,7 @@ mod cli;
 mod keypair;
 mod deploy;
 mod serve;
-mod memo;
+mod noop;  // Replaced memo with noop
 mod utils;
 
 use cli::{Cli, Commands};
@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
             .join(".config/solana/id.json")
     });
     let payer = load_keypair(&keypair_path)?;
-    println!("Using keypair: {} from {}", payer.pubkey(), keypair_path.display()); // Now works with Signer in scope
+    println!("Using keypair: {} from {}", payer.pubkey(), keypair_path.display());
     println!("Connected to: {}", rpc_url);
     println!("\n");
 

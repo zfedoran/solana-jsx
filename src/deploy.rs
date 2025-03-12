@@ -9,7 +9,7 @@ use std::fs;
 use std::io::Write;
 use anyhow::{Result, anyhow};
 use base64::{Engine as _, engine::general_purpose};
-use crate::memo::build_memo;
+use crate::noop::build_noop_instruction;
 
 pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Result<()> {
     let file_data = fs::read(filename)?;
@@ -17,7 +17,7 @@ pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Resu
     encoder.write_all(&file_data)?;
     let compressed_data = encoder.finish()?;
 
-    let chunks: Vec<&[u8]> = compressed_data.chunks(200).collect();
+    let chunks: Vec<&[u8]> = compressed_data.chunks(1200).collect(); // Increased chunk size
     let total_chunks = chunks.len();
 
     let mut prev_tx_id: Option<String> = None;
@@ -30,25 +30,26 @@ pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Resu
         };
 
         let encoded_chunk = general_purpose::STANDARD.encode(chunk);
-        let memo_data = encoded_chunk.as_bytes();
-        let total_size = memo_data.len() + metadata.len();
+        let mut instruction_data = Vec::new();
+        instruction_data.extend_from_slice(encoded_chunk.as_bytes());
+        instruction_data.extend_from_slice(metadata.as_bytes());
+
+        let total_size = instruction_data.len();
 
         println!(
             "Chunk {}/{}: Raw size: {} bytes, Encoded size: {} bytes, Metadata: {} bytes, Total: {} bytes",
-            i + 1, total_chunks, chunk.len(), memo_data.len(), metadata.len(), total_size
+            i + 1, total_chunks, chunk.len(), encoded_chunk.len(), metadata.len(), total_size
         );
         println!("Metadata content: {}", metadata);
 
-        if total_size > 1024 {
+        if total_size > 1232 { // Noop has higher limit than memo
             return Err(anyhow!(
-                "Memo exceeds 1024 bytes: {} bytes (chunk: {}, metadata: {})",
-                total_size,
-                memo_data.len(),
-                metadata.len()
+                "Instruction data exceeds 1232 bytes: {} bytes",
+                total_size
             ));
         }
 
-        let instruction = build_memo(memo_data, &metadata, &[&payer.pubkey()]);
+        let instruction = build_noop_instruction(&instruction_data, &[&payer.pubkey()]);
         let recent_blockhash = client.get_latest_blockhash()?;
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
