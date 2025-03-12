@@ -11,7 +11,7 @@ mod cli;
 mod keypair;
 mod deploy;
 mod serve;
-mod noop;  // Replaced memo with noop
+mod noop;
 mod utils;
 
 use cli::{Cli, Commands};

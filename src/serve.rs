@@ -2,7 +2,6 @@ use solana_client::{rpc_client::RpcClient, rpc_config::RpcTransactionConfig};
 use solana_sdk::{commitment_config::CommitmentConfig, signature::Signature};
 use solana_transaction_status::UiTransactionEncoding;
 use anyhow::{Result, anyhow};
-use base64::{Engine as _, engine::general_purpose};
 use warp::Filter;
 use crate::utils::decompress;
 use crate::noop::NOOP_PROGRAM_ID;
@@ -37,19 +36,32 @@ pub async fn serve(client: &RpcClient, tx_id: Option<&str>) -> Result<()> {
                 .ok_or_else(|| anyhow!("No noop instruction found in tx: {}", current_tx_id))?;
 
             let instruction_data = instruction.data.clone();
-            let instruction_str = String::from_utf8(instruction_data)?;
 
-            let parts: Vec<&str> = instruction_str.split('|').collect();
+            // Find the second-to-last '|' to locate the start of metadata
+            let pipe_positions = instruction_data
+                .iter()
+                .rposition(|&b| b == b'|')
+                .and_then(|last| {
+                    instruction_data[..last]
+                        .iter()
+                        .rposition(|&b| b == b'|')
+                });
+
+            let metadata_start = pipe_positions
+                .ok_or_else(|| anyhow!("No valid metadata separator found in instruction data"))?;
+
+            let chunk_data = &instruction_data[..metadata_start];
+            let metadata = String::from_utf8(instruction_data[metadata_start..].to_vec())?;
+            let parts: Vec<&str> = metadata.split('|').collect();
+
             if parts.len() != 3 {
-                return Err(anyhow!("Invalid instruction data format: {}", instruction_str));
+                return Err(anyhow!("Invalid metadata format: {}", metadata));
             }
 
-            let encoded_chunk = parts[0];
             let chunk_num = parts[1].parse::<usize>()?;
             let prev = parts[2];
 
-            let decoded_chunk = general_purpose::STANDARD.decode(encoded_chunk)?;
-            chunks.push((chunk_num, decoded_chunk));
+            chunks.push((chunk_num, chunk_data.to_vec()));
 
             if prev == "start" {
                 break;

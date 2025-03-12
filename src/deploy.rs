@@ -8,7 +8,6 @@ use flate2::Compression;
 use std::fs;
 use std::io::Write;
 use anyhow::{Result, anyhow};
-use base64::{Engine as _, engine::general_purpose};
 use crate::noop::build_noop_instruction;
 
 pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Result<()> {
@@ -17,7 +16,7 @@ pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Resu
     encoder.write_all(&file_data)?;
     let compressed_data = encoder.finish()?;
 
-    let chunks: Vec<&[u8]> = compressed_data.chunks(1200).collect(); // Increased chunk size
+    let chunks: Vec<&[u8]> = compressed_data.chunks(1000).collect();
     let total_chunks = chunks.len();
 
     let mut prev_tx_id: Option<String> = None;
@@ -29,20 +28,19 @@ pub async fn deploy(client: &RpcClient, payer: &Keypair, filename: &str) -> Resu
             format!("|{}|start", i + 1)
         };
 
-        let encoded_chunk = general_purpose::STANDARD.encode(chunk);
         let mut instruction_data = Vec::new();
-        instruction_data.extend_from_slice(encoded_chunk.as_bytes());
+        instruction_data.extend_from_slice(chunk);
         instruction_data.extend_from_slice(metadata.as_bytes());
 
         let total_size = instruction_data.len();
 
         println!(
-            "Chunk {}/{}: Raw size: {} bytes, Encoded size: {} bytes, Metadata: {} bytes, Total: {} bytes",
-            i + 1, total_chunks, chunk.len(), encoded_chunk.len(), metadata.len(), total_size
+            "Chunk {}/{}: Raw size: {} bytes, Metadata: {} bytes, Total: {} bytes",
+            i + 1, total_chunks, chunk.len(), metadata.len(), total_size
         );
         println!("Metadata content: {}", metadata);
 
-        if total_size > 1232 { // Noop has higher limit than memo
+        if total_size > 1080 {
             return Err(anyhow!(
                 "Instruction data exceeds 1232 bytes: {} bytes",
                 total_size
